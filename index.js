@@ -4,6 +4,8 @@ require('./db/config');
 const  Product=require("./db/Product")
 const app=express();
 app.use(express.json());//middleware
+const jwt=require('jsonwebtoken');
+const jwtkey='e-comm'//keep this key a secret
 const corsOptions = {
     origin: 'http://localhost:3000',  // Replace with your frontend's URL
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
@@ -24,18 +26,32 @@ app.post("/register",async(req,res)=>{
     //to remove password from registeration 
     result=result.toObject();
     delete result.password;
-    res.send(result)
+    
+    jwt.sign({ result }, jwtkey, { expiresIn: "2h" }, (err, token) => {
+        if (err) {
+          res.status(500).send({ result: "Something went wrong" });
+        } 
+          res.send({ result, auth: token });
+        
+      });
 })
 app.post('/login',async(req,res)=>{
     // res.send(req.body)
     if(req.body.password && req.body.email){
     let user = await User.findOne(req.body).select("-password");//we don't need password
     //finding only on data
-    if(user){
-   res.send(user)}
-   else{
-       res.send({result:"no user found"})
-   }
+    if (user) {
+        jwt.sign({ user }, jwtkey, { expiresIn: "2h" }, (err, token) => {
+          if (err) {
+            res.status(500).send({ result: "Something went wrong" });
+          } else {
+            res.send({ user, auth: token });
+          }
+        });
+      } else {
+        res.status(404).send({ result: "User not found" });
+      }
+      
 }else{
     res.send({result:"no user found"})
 }
@@ -84,10 +100,9 @@ app.get("/search/:key",async(req,res)=>{
         "$or": [
             { "name": { $regex: new RegExp(req.params.key, 'i') },
             
-         },
-         { "company": { $regex: new RegExp(req.params.key, 'i') },
+         }
             
-        }
+        
         ]
     });
     res.send(result);
