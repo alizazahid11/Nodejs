@@ -78,4 +78,19 @@ let result=await Product.updateOne(
 res.send(result)
 
 })
+//for search fetching data
+app.get("/search/:key",async(req,res)=>{
+    let result=await Product.find({
+        "$or": [
+            { "name": { $regex: new RegExp(req.params.key, 'i') },
+            
+         },
+         { "company": { $regex: new RegExp(req.params.key, 'i') },
+            
+        }
+        ]
+    });
+    res.send(result);
+    
+})
 app.listen(8000);
