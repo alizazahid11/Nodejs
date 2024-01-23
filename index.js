@@ -18,6 +18,23 @@ app.post("/register",async(req,res)=>{
     //steps to show api in mongodb
     let user =new User(req.body);
     let result=await user.save();
+    //to remove password from registeration 
+    result=result.toObject();
+    delete result.password;
     res.send(result)
 })
-app.listen(5000);
+app.post('/login',async(req,res)=>{
+    // res.send(req.body)
+    if(req.body.password && req.body.email){
+    let user = await User.findOne(req.body).select("-password");//we don't need password
+    //finding only on data
+    if(user){
+   res.send(user)}
+   else{
+       res.send({result:"no user found"})
+   }
+}else{
+    res.send({result:"no user found"})
+}
+})
+app.listen(8000);
