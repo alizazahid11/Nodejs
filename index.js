@@ -60,4 +60,13 @@ app.delete("/product/:id",async(req,res)=>{
     let result=await Product.deleteOne({_id:req.params.id})
     res.send(result)
 })
+//getting data from update table 
+app.get("/product/:id",async(req,res)=>{
+  let result=await Product.findOne({_id:req.params.id})
+  if(result){
+      res.send(result)
+  }else{
+    res.send({"result":"no product found"})
+  }
+})
 app.listen(8000);
