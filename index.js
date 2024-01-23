@@ -1,6 +1,7 @@
 const express=require('express');
 const cors=require('cors');
-require('./db/config')
+require('./db/config');
+const  Product=require("./db/Product")
 const app=express();
 app.use(express.json());//middleware
 const corsOptions = {
@@ -14,6 +15,8 @@ app.use(cors(corsOptions));
 
 
 const User = require('./db/User')
+//for user
+//---------------------------------------//
 app.post("/register",async(req,res)=>{
     //steps to show api in mongodb
     let user =new User(req.body);
@@ -36,5 +39,12 @@ app.post('/login',async(req,res)=>{
 }else{
     res.send({result:"no user found"})
 }
+})
+//for products
+//---------------------------------------//
+app.post("/addproduct",async(req,res)=>{
+    let product=new Product(req.body);
+    let result=await product.save();
+    res.send(result)
 })
 app.listen(8000);
