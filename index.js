@@ -23,7 +23,8 @@ app.post("/register",async(req,res)=>{
     //steps to show api in mongodb
     let user =new User(req.body);
     let result=await user.save();
-    //to remove password from registeration 
+    //to remove password from registeration
+    //jwt auth api authorization
     result=result.toObject();
     delete result.password;
     
@@ -58,12 +59,12 @@ app.post('/login',async(req,res)=>{
 })
 //for products
 //---------------------------------------//
-app.post("/addproduct",async(req,res)=>{
+app.post("/addproduct",verifytoken,async(req,res)=>{
     let product=new Product(req.body);
     let result=await product.save();
     res.send(result)
 })
-app.get("/products",async(req,res)=>{
+app.get("/products",verifytoken,async(req,res)=>{
     const products=await Product.find();
     if(products.length>0){
         res.send(products)
@@ -72,12 +73,12 @@ app.get("/products",async(req,res)=>{
         res.send({result:"no product found"})
     }
 })
-app.delete("/product/:id",async(req,res)=>{
+app.delete("/product/:id",verifytoken,async(req,res)=>{
     let result=await Product.deleteOne({_id:req.params.id})
     res.send(result)
 })
 //getting data from update table 
-app.get("/product/:id",async(req,res)=>{
+app.get("/product/:id",verifytoken,async(req,res)=>{
   let result=await Product.findOne({_id:req.params.id})
   if(result){
       res.send(result)
@@ -86,7 +87,7 @@ app.get("/product/:id",async(req,res)=>{
   }
 })
 //update method 
-app.put("/product/:id",async(req,res)=>{
+app.put("/product/:id",verifytoken,async(req,res)=>{
 let result=await Product.updateOne(
     {_id:req.params.id},
     {$set:req.body}
@@ -95,7 +96,7 @@ res.send(result)
 
 })
 //for search fetching data
-app.get("/search/:key",async(req,res)=>{
+app.get("/search/:key",verifytoken,async(req,res)=>{
     let result=await Product.find({
         "$or": [
             { "name": { $regex: new RegExp(req.params.key, 'i') },
@@ -108,4 +109,23 @@ app.get("/search/:key",async(req,res)=>{
     res.send(result);
     
 })
+//middleware for verification of jwt 
+function verifytoken(req,res,next){
+ let token=req.headers['authorization']
+ if(token){
+  token=token.split(' ')[1];
+ 
+  jwt.verify(token,jwtkey,(err,valid)=>{
+     if(err){
+      res.status(401).send({result:"please provide valid token with header"})
+     }else{
+      next();
+     }
+  })
+ }else{
+   res.send({result:"please add token with header"})
+ }
+// console.log("middleware call if",token);
+
+}
 app.listen(8000);
